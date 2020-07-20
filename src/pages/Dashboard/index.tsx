@@ -30,12 +30,43 @@ interface Balance {
 }
 
 const Dashboard: React.FC = () => {
-  // const [transactions, setTransactions] = useState<Transaction[]>([]);
-  // const [balance, setBalance] = useState<Balance>({} as Balance);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [balance, setBalance] = useState<Balance>({} as Balance);
 
   useEffect(() => {
     async function loadTransactions(): Promise<void> {
-      // TODO
+      const response = await api.get('/transactions');
+
+      const receivedTransactions: Transaction[] = response.data.transactions;
+
+      const formattedTransactions = receivedTransactions.map(transaction => {
+        const formattedDate = new Date(
+          transaction.created_at,
+        ).toLocaleDateString('pt-br');
+
+        const formattedValue =
+          transaction.type === 'income'
+            ? formatValue(Number(transaction.value))
+            : `- ${formatValue(Number(transaction.value))}`;
+
+        return {
+          ...transaction,
+          formattedDate,
+          formattedValue,
+        };
+      });
+
+      setTransactions(formattedTransactions);
+
+      const receivedBalance: Balance = response.data.balance;
+
+      const formattedBalance = {
+        income: formatValue(Number(receivedBalance.income)),
+        outcome: formatValue(Number(receivedBalance.outcome)),
+        total: formatValue(Number(receivedBalance.total)),
+      };
+
+      setBalance(formattedBalance);
     }
 
     loadTransactions();
